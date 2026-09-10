@@ -112,7 +112,7 @@ From the integrated terminal you are inside the container as your LDAP user, on 
 Add `--training` and a command after `--`. The job runs as a standard Run:ai training workload with `OnFailure` restart, so it retries on crashes. This example uses every flag, including the two that only apply to training:
 
 ```
-python scripts/cluster/runai_submit.py \
+uv run scripts/cluster/runai_submit.py \
     --training \
     --name train-run-0 \
     --project myproject \
@@ -135,7 +135,7 @@ A shell loop is all you need for a sweep. Each job gets its own name, and becaus
 
 ```
 for i in 0 1 2 3 4 5 6 7; do
-    python scripts/cluster/runai_submit.py \
+    uv run scripts/cluster/runai_submit.py \
         --training \
         --name sweep-lr-$i \
         --project myproject \
