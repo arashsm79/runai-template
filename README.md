@@ -78,6 +78,19 @@ Every parameter the script accepts:
 | `--password` | required | SSH password |
 | `-- <command>` | `sleep infinity` | Command to run inside the container |
 
+## Open a shell in the workspace
+
+`runai workspace exec` gives you a shell without port forwarding:
+
+```
+runai workspace exec mldev \
+    --project myproject \
+    --tty --stdin -- \
+    /bin/bash -c 'exec "$HOME/.nss/shell" -l'
+```
+
+Keep the single quotes so `$HOME` expands inside the container. The exec process does not inherit the nss_wrapper environment from the entrypoint, so a plain `/bin/bash` cannot resolve the account the entrypoint serves. `$HOME/.nss/shell` re-applies it, which makes the username resolve in the prompt, `whoami`, and shells such as fish.
+
 ## Port forward
 
 The script prints the port-forward command. After a couple minutes, run it in a second terminal and leave it running:
