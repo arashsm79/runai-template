@@ -1,13 +1,13 @@
 # runai-template
 
-Scripts for running interactive dev containers and batch training jobs on a Run:ai cluster, with SSH access through port forwarding. The container creates your cluster user account at startup, keeps your home directory on a persistent volume, and runs sshd alongside your workload so VS Code can connect to it.
+Scripts for running interactive dev containers and batch training jobs on a Run:ai cluster, with SSH access through port forwarding. The container picks up the identity the cluster assigns, keeps your home directory on a persistent volume, and runs sshd alongside your workload so VS Code can connect to it.
 
 ## Layout
 
 ```
 scripts/cluster/
-├── Dockerfile                  Dev image: PyTorch base, sshd, uv, sudo
-├── entrypoint.sh               Creates the user, starts sshd, runs your command
+├── Dockerfile                  Dev image: PyTorch base, sshd, uv, dev tools
+├── entrypoint.sh               Serves your cluster identity, starts sshd, runs your command
 ├── docker_build_publish.py     Builds and optionally pushes the image
 └── runai_submit.py             Submits a workspace or a training job
 ```
@@ -17,11 +17,11 @@ scripts/cluster/
 - The `runai` CLI, installed and authenticated (`runai login`). Ask your cluster admin for access to a project.
 - A Run:ai project with an existing PVC that will hold your data and home directory.
 - Docker, if you want to build and publish the image.
-- A username of your choice, plus your LDAP uid and gid on the cluster. On a cluster login node, run `id` and note both numbers. If you have no shell access, your admin can tell you.
+- A username of your choice for the container account.
 
 ## The image
 
-All examples use my prebuilt image [`arashsm79/mlruntime:latest`](https://hub.docker.com/r/arashsm79/mlruntime). It is NVIDIA's PyTorch image with sshd, uv, sudo, and a pile of dev tools installed, so it works with these scripts out of the box. You do not need to build anything to use them.
+All examples use my prebuilt image [`arashsm79/mlruntime:latest`](https://hub.docker.com/r/arashsm79/mlruntime). It is NVIDIA's PyTorch image with sshd, uv, and a pile of dev tools installed, so it works with these scripts out of the box. You do not need to build anything to use them.
 
 If you want your own image instead, build and publish it with:
 
@@ -36,14 +36,12 @@ You can point at any registry your cluster can pull from. The base image tag liv
 
 ## Set up your identity
 
-The submit script takes the same identity flags every time:
+Run:ai runs the container as the UID and GID it assigns you, so there are no numbers to look up. The submit script takes the same flags every time:
 
-- `--ldap-user`: your login name (can be whatever you want)
-- `--ldap-uid`: your user ID
-- `--ldap-gid`: your group ID
+- `--ldap-user`: your login name inside the container (can be whatever you want)
 - `--password`: the SSH password
 
-The entrypoint creates the user inside the container, mounts your home at `/scratch/<project>/home/<ldap-user>` on the PVC, gives you passwordless sudo, and generates SSH host keys that persist on the PVC so they survive across jobs.
+The entrypoint never needs root: it serves an account for the UID it is already running as, mounts your home at `/scratch/<project>/home/<ldap-user>` on the PVC, and generates SSH host keys that persist on the PVC so they survive across jobs. Because it runs unprivileged, there is no `sudo` inside the container and files you create carry the group the cluster assigned you.
 
 ## Launch an interactive workspace
 
@@ -55,7 +53,7 @@ uv run scripts/cluster/runai_submit.py \
     --project myproject \
     --pvc myproject-pvc \
     --image docker.io/arashsm79/mlruntime:latest \
-    --ldap-user yourusername --ldap-uid 2401 --ldap-gid 1552 \
+    --ldap-user yourusername \
     --gpu-portion-request 0.1 \
     --cpu-core-request 1.0 \
     --password "yourpassword"
@@ -70,9 +68,7 @@ Every parameter the script accepts:
 | `--training` | off | Submit a training workload instead of a workspace. Requires a command after `--` |
 | `--image` | required | Container image to run |
 | `--pvc` | required | Existing PVC name to mount |
-| `--ldap-user` | required | Login name created inside the container |
-| `--ldap-uid` | required | Your numeric user ID |
-| `--ldap-gid` | required | Your numeric group ID |
+| `--ldap-user` | required | Login name served inside the container |
 | `--gpu-portion-request` | `0.0` workspace, `1.0` training | GPU fraction between 0 and 1 |
 | `--cpu-core-request` | `1.0` | CPU cores to request |
 | `--cpu-memory-request` | none | Memory request, for example `16G`. Training only |
@@ -105,7 +101,7 @@ Host runai-dev
 
 With the port-forward running, open the command palette, run `Remote-SSH: Connect to Host`, pick `runai-dev`, and enter your SSH password. VS Code installs its server into `.vscode-server` under your persistent home, so the second connect is fast and survives pod restarts.
 
-From the integrated terminal you are inside the container as your LDAP user, on the PVC. Anything you install with `uv` or `pip` persists in your home directory.
+From the integrated terminal you are inside the container as your cluster user, on the PVC. Anything you install with `uv` or `pip` persists in your home directory.
 
 ## Launch a training job
 
@@ -118,7 +114,7 @@ uv run scripts/cluster/runai_submit.py \
     --project myproject \
     --pvc myproject-pvc \
     --image docker.io/arashsm79/mlruntime:latest \
-    --ldap-user you --ldap-uid 1000 --ldap-gid 1000 \
+    --ldap-user you \
     --gpu-portion-request 1.0 \
     --cpu-core-request 4.0 \
     --cpu-memory-request 32G \
@@ -141,7 +137,7 @@ for i in 0 1 2 3 4 5 6 7; do
         --project myproject \
         --pvc myproject-pvc \
         --image docker.io/arashsm79/mlruntime:latest \
-        --ldap-user you --ldap-uid 1000 --ldap-gid 1000 \
+        --ldap-user you \
         --gpu-portion-request 0.5 \
         --password "SSH_PASSWORD" \
         -- uv run train.py --lr 0.001 --seed $i --out runs/lr-$i

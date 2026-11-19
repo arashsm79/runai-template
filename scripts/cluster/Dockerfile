@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libglew-dev \
         libglfw3-dev \
         libjpeg-dev \
+        libnss-wrapper \
         libosmesa6-dev \
         libpng-dev \
         libsm6 \
@@ -55,6 +56,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         net-tools \
         openssh-client \
         openssh-server \
+        openssl \
         patchelf \
         pigz \
         pkg-config \

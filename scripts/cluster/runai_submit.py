@@ -29,8 +29,6 @@ def main():
         help="Existing PVC mounted at the project directory",
     )
     parser.add_argument("--ldap-user", required=True, help="LDAP login name")
-    parser.add_argument("--ldap-uid", required=True, help="LDAP user ID")
-    parser.add_argument("--ldap-gid", required=True, help="LDAP group ID")
     parser.add_argument(
         "--gpu-portion-request",
         help="GPU fraction between 0 and 1 (default: 1.0 for training, 0.0 for workspace)",
@@ -100,10 +98,6 @@ def main():
         "--environment-variable",
         f"LDAP_USER={args.ldap_user}",
         "--environment-variable",
-        f"LDAP_UID={args.ldap_uid}",
-        "--environment-variable",
-        f"LDAP_GID={args.ldap_gid}",
-        "--environment-variable",
         f"SSH_PASSWORD={args.password}",
     ]
 
@@ -132,10 +126,6 @@ def main():
         ])
 
     command.extend([
-        "--run-as-uid",
-        "0",
-        "--run-as-gid",
-        "0",
         "--port",
         "service-type=ClusterIP,container=2222",
     ])
