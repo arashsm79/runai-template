@@ -30,6 +30,10 @@ def main():
     )
     parser.add_argument("--ldap-user", required=True, help="LDAP login name")
     parser.add_argument(
+        "--supplemental-groups",
+        help="Comma-separated group IDs to add, for example 464412",
+    )
+    parser.add_argument(
         "--gpu-portion-request",
         help="GPU fraction between 0 and 1 (default: 1.0 for training, 0.0 for workspace)",
     )
@@ -123,6 +127,12 @@ def main():
             args.gpu_portion_request or "0.0",
             "--cpu-core-request",
             args.cpu_core_request,
+        ])
+
+    if args.supplemental_groups:
+        command.extend([
+            "--supplemental-groups",
+            args.supplemental_groups,
         ])
 
     command.extend([

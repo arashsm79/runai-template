@@ -41,7 +41,7 @@ Run:ai runs the container as the UID and GID it assigns you, so there are no num
 - `--ldap-user`: your login name inside the container (can be whatever you want)
 - `--password`: the SSH password
 
-The entrypoint never needs root: it serves an account for the UID it is already running as, mounts your home at `/scratch/<project>/home/<ldap-user>` on the PVC, and generates SSH host keys that persist on the PVC so they survive across jobs. Because it runs unprivileged, there is no `sudo` inside the container and files you create carry the group the cluster assigned you.
+The entrypoint never needs root: it serves an account for the UID it is already running as, mounts your home at `/scratch/<project>/home/<ldap-user>` on the PVC, and generates SSH host keys that persist on the PVC so they survive across jobs. Because it runs unprivileged, there is no `sudo` inside the container and files you create carry the group the cluster assigned you. Pass `--supplemental-groups` to join additional groups for shared directories.
 
 ## Launch an interactive workspace
 
@@ -69,6 +69,7 @@ Every parameter the script accepts:
 | `--image` | required | Container image to run |
 | `--pvc` | required | Existing PVC name to mount |
 | `--ldap-user` | required | Login name served inside the container |
+| `--supplemental-groups` | none | Comma-separated group IDs to add, for example `464412` |
 | `--gpu-portion-request` | `0.0` workspace, `1.0` training | GPU fraction between 0 and 1 |
 | `--cpu-core-request` | `1.0` | CPU cores to request |
 | `--cpu-memory-request` | none | Memory request, for example `16G`. Training only |
