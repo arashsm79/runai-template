@@ -54,6 +54,7 @@ uv run scripts/cluster/runai_submit.py \
     --pvc myproject-pvc \
     --image docker.io/arashsm79/mlruntime:latest \
     --ldap-user yourusername \
+    --supplemental-groups 464412 \
     --gpu-portion-request 0.1 \
     --cpu-core-request 1.0 \
     --password "yourpassword"
@@ -116,6 +117,7 @@ uv run scripts/cluster/runai_submit.py \
     --pvc myproject-pvc \
     --image docker.io/arashsm79/mlruntime:latest \
     --ldap-user you \
+    --supplemental-groups 464412 \
     --gpu-portion-request 1.0 \
     --cpu-core-request 4.0 \
     --cpu-memory-request 32G \
