@@ -88,6 +88,14 @@ printf '%s:%s:%s:%s:runtime:%s:%s\n' \
     "${login_shell}" >> "${identity_dir}/passwd"
 awk -F: -v gid="${runtime_gid}" '$3 + 0 != gid + 0' /etc/group > "${identity_dir}/group"
 printf 'runtime-%s:x:%s:\n' "${runtime_gid}" "${runtime_gid}" >> "${identity_dir}/group"
+
+# Supplemental groups the workload was granted have no name in the image, so
+# add one per GID to keep group lookups from warning.
+for gid in $(id -G); do
+    if ! awk -F: -v gid="${gid}" '$3 + 0 == gid + 0 { found = 1 } END { exit !found }' "${identity_dir}/group"; then
+        printf 'group-%s:x:%s:\n' "${gid}" "${gid}" >> "${identity_dir}/group"
+    fi
+done
 chmod 600 "${identity_dir}/passwd"
 
 # Everything that resolves accounts needs the wrapper, ssh-keygen included.
