@@ -91,7 +91,7 @@ ENV XLA_PYTHON_CLIENT_PREALLOCATE=false
 ENV MUJOCO_GL=egl
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.11.0 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /uvx /bin/
 
 # Copy entrypoint script
 RUN mkdir -p /docker
